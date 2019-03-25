@@ -27,9 +27,6 @@ define :main_synth do |note|
   sleep 0.5
 end
 
-# Define a couple functions to avoid typing
-# "main_synth root" a million times
-
 define :common_synth_part do |n1, n2, n3|
   # First part of the beat is
   # the same for both sections
