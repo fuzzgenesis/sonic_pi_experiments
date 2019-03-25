@@ -28,8 +28,11 @@ define :main_synth do |note|
 end
 
 define :common_synth_part do |n1, n2, n3|
-  # First part of the beat is
-  # the same for both sections
+  # First part of the beat, which is the same
+  # for both sections.
+  #
+  # Args:
+  #   n1, n2, n3 - 3 different notes
   2.times do
     main_synth n1
   end
@@ -70,6 +73,10 @@ end
 
 define :aah_sound do |synth, amp|
   # Ethereal vocal bits I don't feel like singing
+  #
+  # Args:
+  #   synth - built in synth sound to use
+  #   amp - how loud to be (0, 1)
   use_synth synth
   with_fx :reverb do
     play :fs,
@@ -88,6 +95,9 @@ end
 
 define :kick do |slp|
   # Set the sound of the kick(? I guess) drum
+  #
+  # Args:
+  #   slp - sleep time after sample
   sample :drum_heavy_kick,
     rate: 1,
     pitch_dis: 0.001
@@ -96,12 +106,18 @@ end
 
 define :snare_1 do |slp|
   # Set the sound of the first snare
+  #
+  # Args:
+  #   slp - sleep time after sample
   sample :drum_snare_soft
   sleep slp
 end
 
 define :snare_2 do |slp|
   # Sound of the second snare
+  #
+  # Args:
+  #   slp - sleep time after sample
   sample :drum_snare_hard,
     amp: 0.5,
     finish: 0.5
