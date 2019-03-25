@@ -13,12 +13,15 @@ define :main_synth do |note|
   #   note - single note to play (e.g. 62, :d3)
   with_synth :prophet do
     with_fx :lpf, cutoff: 90 do
-      play note,
-        attack: 0.1,
-        decay: 0.05,
-        sustain_level: 0.7,
-        release: 1,
-        pan: rrand(-0.5, 0.5)
+      with_fx :echo, phase: 0.25, mix: [0,0,0,0.25].choose do  # TODO there has to be a prettier way D:
+        play note,
+          amp: rrand(0.8, 1.1),
+          attack: 0.1,
+          decay: 0.05,
+          sustain_level: 0.7,
+          release: 1,
+          pan: rrand(-0.5, 0.5)
+      end
     end
   end
   sleep 0.5
@@ -26,24 +29,15 @@ end
 
 # Define a couple functions to avoid typing
 # "main_synth root" a million times
-define :n1 do |note|
-  main_synth note
-end
-define :n2 do |note|
-  main_synth note + 7
-end
-define :n3 do |note|
-  main_synth note + 12
-end
 
-define :common_synth_part do |note|
+define :common_synth_part do |n1, n2, n3|
   # First part of the beat is
   # the same for both sections
   2.times do
-    n1 note
+    main_synth n1
   end
-  n3 note
-  n2 note
+  main_synth n3
+  main_synth n2
 end
 
 define :synth_beat do |root|
@@ -53,18 +47,21 @@ define :synth_beat do |root|
   #  root - first note of the beat, used to calculate offsets
   #
   # TODO: is there any way to avoid how clunky this feels?
+  n1 = root
+  n2 = root + 7
+  n3 = root + 12
   
-  common_synth_part root
+  common_synth_part n1, n2, n3
   3.times do
-    n1 root
+    main_synth n1
   end
-  n2 root
+  main_synth n2
   
-  common_synth_part root
-  n1 root
-  n3 root
+  common_synth_part n1, n2, n3
+  main_synth n1
+  main_synth n3
   2.times do
-    n2 root
+    main_synth n2
   end
 end
 
@@ -74,14 +71,18 @@ define :synth_loop do
   synth_beat :b2
 end
 
-define :aah_sound do
+define :aah_sound do |synth, amp|
   # Ethereal vocal bits I don't feel like singing
-  with_fx :reverb, room: 0.7 do
-    sample :ambi_choir,
-      pitch: -3,  # It starts as an A but needs to be F#... however, this sounds awful
-      lpf: 90
+  use_synth synth
+  with_fx :reverb do
+    play :fs,
+      amp: amp,
+      attack: 0.2,
+      decay_level: 0.6,
+      decay: 0.2,
+      pan: rrand(-0.5, 0.5),
+      release: 8
   end
-  sleep 16
 end
 
 #########################
@@ -106,7 +107,7 @@ define :snare_2 do |slp|
   # Sound of the second snare
   sample :drum_snare_hard,
     amp: 0.5,
-    finish: 0.7
+    finish: 0.5
   sleep slp
 end
 
@@ -115,7 +116,14 @@ define :common_drum_part do
   kick 1
   snare_1 0.5
   kick 0.5
-  kick 1
+  # Maybe echo, maybe don't
+  if one_in(5)
+    with_fx :echo, amp: 0.75, phase: 0.2, decay: 0.2, mix: 0.25 do
+      kick 1
+    end
+  else
+    kick 1
+  end
 end
 
 define :main_drum_beat do
@@ -150,11 +158,13 @@ in_thread do
   end
 end
 
-# Choir sounds
+# Additional synths
 in_thread do
   sync :drum_beat  # Maybe I should rename this cue
-  4.times do
-    aah_sound
+  loop do
+    aah_sound :sine, 0.4
+    aah_sound :dsaw, 0.1
+    sleep 16
   end
 end
 
