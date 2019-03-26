@@ -27,41 +27,18 @@ define :main_synth do |note|
   sleep 0.5
 end
 
-define :common_synth_part do |n1, n2, n3|
-  # First part of the beat, which is the same
-  # for both sections.
-  #
-  # Args:
-  #   n1, n2, n3 - 3 different notes
-  2.times do
-    main_synth n1
-  end
-  main_synth n3
-  main_synth n2
-end
-
 define :synth_beat do |root|
   # Construct the main synth beat.
   #
   # Args:
   #  root - first note of the beat, used to calculate offsets
-  #
-  # TODO: is there any way to avoid how clunky this feels?
-  n1 = root
-  n2 = root + 7
-  n3 = root + 12
   
-  common_synth_part n1, n2, n3
-  3.times do
-    main_synth n1
-  end
-  main_synth n2
-  
-  common_synth_part n1, n2, n3
-  main_synth n1
-  main_synth n3
-  2.times do
-    main_synth n2
+  pattern = [0, 0, 12, 7,
+             0, 0, 0, 7,
+             0, 0, 12, 7,
+             0, 12, 7, 7].ring + root
+  16.times do
+    main_synth pattern.tick
   end
 end
 
