@@ -1,6 +1,6 @@
 # Sonic Pi instrumental cover of "Oblivion" by Grimes
 # !!VERY FAR FROM FINISHED!!
-
+use_random_seed 133337
 use_bpm 156
 
 #########################
@@ -62,13 +62,47 @@ define :aah_sound do |synth, amp|
       decay_level: 0.6,
       decay: 0.2,
       pan: rrand(-0.5, 0.5),
-      release: 8
+      ##| pan: [0.5, -0.5].ring.tick,
+      release: rrand(6, 8)
+  end
+end
+
+define :end_synth do |note, len|
+  # Look, naming is one of the two hardest
+  # problems in computer science, okay? It's
+  # a synth that comes in near the end.
+  #
+  # Args:
+  #   note - note to play
+  #   len - length of time (in beats) to both sustain and sleep
+  use_synth :hoover
+  play note, amp: rrand(0.3, 0.4), attack: 0.1, sustain: len, release: 0
+  sleep len
+end
+
+define :end_synth_loop do |root|
+  # Defines the pattern for this synth
+  #
+  # Args:
+  #   root - note to calculate offsets
+  pattern = [0, 1, 2, 3, 0, -2].ring
+  times = [2.5, 0.5, 0.5, 0.5, 3, 1].ring
+  
+  # TODO I hate that I can't just use "play_pattern_timed" for this
+  idx = 0
+  2.times do
+    pattern.length.times do
+      end_synth (pattern + root)[idx], times[idx]
+      idx = idx + 1
+    end
   end
 end
 
 #########################
 # DRUMS
 #########################
+
+# TODO abstract out all these sleep parameters
 
 define :kick do |slp|
   # Set the sound of the kick(? I guess) drum
@@ -107,6 +141,7 @@ define :common_drum_part do
   snare_1 0.5
   kick 0.5
   # Maybe echo, maybe don't
+  # TODO is there a more elegant way to express this?
   if one_in(5)
     with_fx :echo, amp: 0.75, phase: 0.2, decay: 0.2, mix: 0.25 do
       kick 1
@@ -135,6 +170,10 @@ end
 in_thread do
   synth_loop
   cue :drum_beat  # Start drums after first synth loop
+  1.times do
+    synth_loop
+  end
+  cue :end_synth  # start end synth
   loop do
     synth_loop
   end
@@ -155,6 +194,14 @@ in_thread do
     aah_sound :sine, 0.4
     aah_sound :dsaw, 0.1
     sleep 16
+  end
+end
+
+in_thread do
+  sync :end_synth
+  2.times do
+    end_synth_loop :d3
+    end_synth_loop :b2
   end
 end
 
