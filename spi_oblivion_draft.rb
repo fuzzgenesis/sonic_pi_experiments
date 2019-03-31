@@ -6,12 +6,13 @@ use_bpm 156
 #########################
 # SYNTHS
 #########################
-define :main_synth do |note|
+define :main_synth do |synth, note|
   # Set the sound of our primary synth.
   #
   # Args:
+  #   synth - synth sound to use
   #   note - single note to play (e.g. 62, :d3)
-  with_synth :prophet do
+  with_synth synth do
     with_fx :lpf, cutoff: 90 do
       with_fx :echo, phase: 0.25, mix: [0,0,0,0.25].choose do  # TODO there has to be a prettier way D:
         play note,
@@ -24,7 +25,7 @@ define :main_synth do |note|
       end
     end
   end
-  sleep 0.5
+  ##| sleep 0.5
 end
 
 define :synth_beat do |root|
@@ -37,8 +38,12 @@ define :synth_beat do |root|
              0, 0, 0, 7,
              0, 0, 12, 7,
              0, 12, 7, 7].ring + root
-  16.times do
-    main_synth pattern.tick
+  idx = 0
+  pattern.length.times do
+    main_synth :prophet, pattern[idx]
+    main_synth :fm, pattern[idx]
+    idx = idx + 1
+    sleep 0.5
   end
 end
 
@@ -76,7 +81,7 @@ define :end_synth do |note, len|
   #   note - note to play
   #   len - length of time (in beats) to both sustain and sleep
   use_synth :hoover
-  play note, amp: rrand(0.3, 0.4), attack: 0.1, sustain: len, release: 0
+  play note, amp: 0.3, attack: 0.1, sustain: len, release: 0
   sleep len
 end
 
@@ -90,22 +95,38 @@ define :end_synth_loop do |root|
   
   # TODO I hate that I can't just use "play_pattern_timed" for this
   idx = 0
-  2.times do
-    pattern.length.times do
-      end_synth (pattern + root)[idx], times[idx]
-      idx = idx + 1
+  with_fx :lpf, cutoff: 70 do
+    2.times do
+      pattern.length.times do
+        end_synth (pattern + root)[idx], times[idx]
+        idx = idx + 1
+      end
     end
   end
 end
+
+define :synth3 do
+  # The synth that comes in with the piano
+  use_synth :square  # TODO this is a pretty poor approximation rn
+  pattern = [:d3,:cs3, :a2, :fs2].ring + 12
+  with_fx :lpf, cutoff: 80 do
+    play_pattern_timed pattern, [0.25]
+    sleep 0.5
+  end
+end
+
 
 #########################
 # DRUMS
 #########################
 
 # TODO abstract out all these sleep parameters
+# Maybe use "knit" instead?
 
 define :kick do |slp|
   # Set the sound of the kick(? I guess) drum
+  # TODO try out different sounds for this,
+  # the real one is more muted
   #
   # Args:
   #   slp - sleep time after sample
@@ -161,19 +182,38 @@ define :main_drum_beat do
   snare_2 1
 end
 
+#########################
+# VOCALS
+#########################
+sample_folder = "/Users/jaguarshark/personal/music/oblivion_samples"
+
+define :v1 do
+  verse1 = "#{sample_folder}/v1_shitty.wav"  # TODO non-shitty version
+  with_fx :reverb do  # TODO put more thought into effects
+    sample verse1
+  end
+end
+
 
 #########################
 # THE ACTUAL SONG
 #########################
 
 # Main thread, will send cues
+# TODO make it so this thread *only* sends cues and sleeps,
+# put main synth in another thread
 in_thread do
   synth_loop
   cue :drum_beat  # Start drums after first synth loop
-  1.times do
+  synth_loop
+  cue :verse1  # Testing
+  2.times do
     synth_loop
   end
+  
+  sleep 16
   cue :end_synth  # start end synth
+  sleep 16
   loop do
     synth_loop
   end
@@ -197,12 +237,34 @@ in_thread do
   end
 end
 
+# Piano
+in_thread do
+  sync :piano
+  # TODO make the piano parts
+end
+
+# Synth that accompanies the piano
+in_thread do
+  sync :piano
+  4.times do
+    synth3
+  end
+end
+
+# End synth
 in_thread do
   sync :end_synth
   2.times do
+    # TODO weird volume fluctuations, why??
     end_synth_loop :d3
     end_synth_loop :b2
   end
+end
+
+# Vocals (can I do them all in the same thread?)
+in_thread do
+  sync :verse1
+  v1
 end
 
 
