@@ -95,14 +95,14 @@ define :end_synth_loop do |root|
   
   # TODO I hate that I can't just use "play_pattern_timed" for this
   idx = 0
-  with_fx :lpf, cutoff: 70 do
-    2.times do
-      pattern.length.times do
-        end_synth (pattern + root)[idx], times[idx]
-        idx = idx + 1
-      end
+  ##| with_fx :lpf, cutoff: 70 do
+  2.times do
+    pattern.length.times do
+      end_synth (pattern + root)[idx], times[idx]
+      idx = idx + 1
     end
   end
+  ##| end
 end
 
 define :synth3 do
@@ -120,10 +120,16 @@ end
 # DRUMS
 #########################
 
-# TODO abstract out all these sleep parameters
-# Maybe use "knit" instead?
+# Soooo apparently you can define functions like this too,
+# because this is quite literally Ruby... derp.
+# TODO actually use this to replace my stupid drum implementation
+def drum_pattern(p)
+  return p.ring.tick(p) == "x"
+end
 
-define :kick do |slp|
+# TODO abstract out all these sleep parameters
+
+def kick(slp)
   # Set the sound of the kick(? I guess) drum
   # TODO try out different sounds for this,
   # the real one is more muted
@@ -188,33 +194,52 @@ end
 sample_folder = "/Users/jaguarshark/personal/music/oblivion_samples"
 
 define :v1 do
-  verse1 = "#{sample_folder}/v1_shitty.wav"  # TODO non-shitty version
+  verse1 = "#{sample_folder}/v1_slightly_less_shitty.wav"  # TODO non-shitty version
   with_fx :reverb do  # TODO put more thought into effects
     sample verse1
   end
 end
 
+define :oohwahoh_x4 do
+  smpl = "#{sample_folder}/oohwahoh_shitty.wav"
+  with_fx :reverb do  # TODO figure out how to slide the panning around
+    sample smpl
+  end
+end
+
+define :la_x5 do
+  smpl = "#{sample_folder}/lalalalala_shitty.wav"
+  with_fx :reverb do
+    sample smpl
+  end
+end
 
 #########################
 # THE ACTUAL SONG
 #########################
-
-# Main thread, will send cues
-# TODO make it so this thread *only* sends cues and sleeps,
-# put main synth in another thread
+v1_adjust = 0.85
+ooh_adjust = -4.15
+# Main thread, sends cues and sleeps
 in_thread do
-  synth_loop
-  cue :drum_beat  # Start drums after first synth loop
-  synth_loop
-  cue :verse1  # Testing
-  2.times do
-    synth_loop
-  end
-  
-  sleep 16
-  cue :end_synth  # start end synth
-  sleep 16
-  loop do
+  sleep 4  # IDK why this is necessary, but it is
+  # TODO 1 bar of intro
+  cue :synth_loop
+  ##| sleep 32
+  cue :drum_beat
+  sleep 16 + v1_adjust  # Compensate for sample timing
+  cue :verse1
+  sleep 64 - v1_adjust + ooh_adjust # Add the adjustment time back in
+  cue :oohwahoh
+  sleep 12  # Don't need to adjust bc it's the same amount off as the previous one
+  cue :la
+  sleep 32 - ooh_adjust
+  cue :end_synth
+end
+
+# Main synth
+in_thread do
+  sync :synth_loop
+  10.times do
     synth_loop
   end
 end
@@ -254,17 +279,28 @@ end
 # End synth
 in_thread do
   sync :end_synth
-  2.times do
-    # TODO weird volume fluctuations, why??
-    end_synth_loop :d3
-    end_synth_loop :b2
-  end
+  end_synth_loop :d3
+  end_synth_loop :b2
 end
 
-# Vocals (can I do them all in the same thread?)
+# Verse/chorus vocals
 in_thread do
   sync :verse1
   v1
 end
+
+# oooooooooooh wah oh
+in_thread do
+  sync :oohwahoh
+  oohwahoh_x4
+end
+
+# LA LA LA LA LAAAA
+in_thread do
+  sync :la
+  la_x5
+end
+
+
 
 
