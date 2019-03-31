@@ -5,15 +5,33 @@
 use_random_seed 573114
 use_synth :pluck
 
-fib = [1,1,2,3,5,8,13,21].ring
+def generate_fib(n)
+  # Generates a palindromic Fibonacci sequence
+  # Don't make n anything too big
+  if n > 8
+    puts "n > 8 might have some preeetty long pauses FYI"
+  end
+  arr = [1, 1]
+  next_fib = 2
+  (n-1).times do
+    idx = arr.length / 2
+    arr.insert(idx, next_fib)
+    arr.insert(idx, next_fib)
+    next_fib += arr[(arr.length / 2) - 2]
+  end
+  return arr
+end
+
+
+fib = generate_fib(5).ring
 slp_idx = rand_i(fib.length)
 
-bm_scale = (scale :b3, :minor).ring
+bm_scale = (scale :b3, :minor, num_octaves: 2).ring
 note_idx = rand_i(bm_scale.length)
 
 live_loop :test do
-  play bm_scale[note_idx]
-  sleep fib[slp_idx] * 0.1  # Let's not sleep for tooooo long
-  note_idx += fib[slp_idx]
+  note_idx += [-1, 1].choose * fib[slp_idx]
   slp_idx += [-1, 1].choose
+  play bm_scale[note_idx]
+  sleep fib[slp_idx] * 0.1
 end
