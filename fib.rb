@@ -22,16 +22,29 @@ def generate_fib(n)
   return arr
 end
 
+def palindrome_scale(scl)
+  # Wrap the scale around so it's continuous
+  # in both directions
+  reversed = scl.reverse
+  reversed = reversed[1, reversed.length - 2]  # Maybe not necessary?
+  return scl + reversed
+end
+
 
 fib = generate_fib(5).ring
 slp_idx = rand_i(fib.length)
 
-bm_scale = (scale :b3, :minor, num_octaves: 2).ring
-note_idx = rand_i(bm_scale.length)
+bm_scale = (scale :b2, :minor, num_octaves: 3).ring
+bm_palindrome = palindrome_scale(bm_scale).ring
+
+note_idx = rand_i(bm_palindrome.length)
 
 live_loop :test do
   note_idx += [-1, 1].choose * fib[slp_idx]
   slp_idx += [-1, 1].choose
-  play bm_scale[note_idx]
+  play bm_palindrome[note_idx]
   sleep fib[slp_idx] * 0.1
 end
+
+
+
