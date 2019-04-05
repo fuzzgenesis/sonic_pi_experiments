@@ -102,7 +102,7 @@ define :end_synth_loop do |root|
       idx = idx + 1
     end
   end
-  ##| end
+  ##| endtests
 end
 
 define :synth3 do
@@ -112,6 +112,78 @@ define :synth3 do
   with_fx :lpf, cutoff: 80 do
     play_pattern_timed pattern, [0.25]
     sleep 0.5
+  end
+end
+
+define :screech do
+  # TODO this is a bad approximation but ehhhh fuck it
+  with_fx :reverb, room: 0.5 do
+    with_fx :ixi_techno, amp: 2, phase: 8, cutoff_min: 71, cutoff_max: 83 do
+      with_fx :hpf, cutoff: 30 do
+        use_synth :beep
+        play :d5
+        use_synth :blade
+        play :b5
+      end
+      use_synth :dull_bell
+      play :d4
+    end
+  end
+end
+
+#########################
+# ALL THE FKN PIANO PARTS
+#########################
+
+define :piano1 do
+  use_synth :piano
+  p1 = (knit :b4, 1, :a4, 1, :fs4, 6)
+  p2 = ([:fs4, :d4] * 4).ring
+  pattern = p1 + p2
+  pattern.length.times do
+    play pattern.tick
+    sleep 0.5
+  end
+end
+
+define :piano2 do
+  use_synth :piano
+  8.times do
+    play :d5
+    play :b4
+    sleep 0.5
+  end
+  p = [:d5, :cs5, :b4, :cs5, :d5]
+  times = [1, 1, 1, 1, 2]
+  play_pattern_timed p, times
+end
+
+define :piano3 do
+  use_synth :piano
+  p = (knit :cs4, 1, :d4, 3)
+  3.times do
+    p.length.times do
+      play p.tick
+      sleep 0.5
+    end
+  end
+end
+
+define :piano4 do
+  use_synth :piano
+  p = ([:b5, :a5, :fs5] * 4).ring
+  p.length.times do
+    play p.tick
+    sleep 0.5
+  end
+end
+
+define :piano5 do
+  use_synth :piano
+  p = ([:fs4, :fs4, :g4, :a4, :fs4])
+  t = [0.5, 0.25, 0.25, 0.5, 0.5]
+  4.times do
+    play_pattern_timed p, t
   end
 end
 
@@ -274,6 +346,11 @@ in_thread do
   4.times do
     synth3
   end
+end
+
+in_thread do
+  sync :sparkles
+  # TODO sparkles
 end
 
 # End synth
