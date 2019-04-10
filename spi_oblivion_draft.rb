@@ -49,6 +49,7 @@ end
 
 define :synth_loop do
   # Main synth loop just ping pongs between d3 and b2
+  # 16 beats long
   synth_beat :d3
   synth_beat :b2
 end
@@ -265,22 +266,29 @@ end
 #########################
 sample_folder = "/Users/jaguarshark/personal/music/oblivion_samples"
 
-define :v1 do
-  verse1 = "#{sample_folder}/v1_slightly_less_shitty.wav"  # TODO non-shitty version
+define :main_vocs do
+  verse1 = "#{sample_folder}/main_vocs.wav"  # TODO non-shitty version
   with_fx :reverb do  # TODO put more thought into effects
     sample verse1
   end
 end
 
 define :oohwahoh_x4 do
-  smpl = "#{sample_folder}/oohwahoh_shitty.wav"
+  smpl = "#{sample_folder}/oohwahoh.wav"
   with_fx :reverb do  # TODO figure out how to slide the panning around
     sample smpl
   end
 end
 
 define :la_x5 do
-  smpl = "#{sample_folder}/lalalalala_shitty.wav"
+  smpl = "#{sample_folder}/lax5.wav"
+  with_fx :reverb do
+    sample smpl
+  end
+end
+
+define :ooh_x5 do
+  smpl = "#{sample_folder}/oohx5.wav"
   with_fx :reverb do
     sample smpl
   end
@@ -289,37 +297,66 @@ end
 #########################
 # THE ACTUAL SONG
 #########################
-v1_adjust = 0.85
+v1_adjust = 0.85  # TODO just put these in the functions themselves
 ooh_adjust = -4.15
 # Main thread, sends cues and sleeps
 in_thread do
   sleep 4  # IDK why this is necessary, but it is
   # TODO 1 bar of intro
+  cue :all_vocals
+  sleep 1.5385
   cue :synth_loop
-  ##| sleep 32
+  sleep 32
   cue :drum_beat
-  sleep 16 + v1_adjust  # Compensate for sample timing
-  cue :verse1
-  sleep 64 - v1_adjust + ooh_adjust # Add the adjustment time back in
-  cue :oohwahoh
-  sleep 12  # Don't need to adjust bc it's the same amount off as the previous one
-  cue :la
-  sleep 32 - ooh_adjust
-  cue :end_synth
+  ##| sleep 32 + v1_adjust  # Compensate for sample timing
+  ##| cue :verse1
+  ##| sleep 64 - v1_adjust + ooh_adjust # Add the adjustment time back in
+  ##| cue :oohwahoh
+  ##| sleep 12  # Don't need to adjust bc it's the same amount off as the previous one
+  ##| cue :la
+  ##| sleep 32 - ooh_adjust
+  ##| cue :end_synth
 end
+
+# Vocal threads
+in_thread do
+  sync :all_vocals
+  main_vocs
+end
+
+in_thread do
+  sync :all_vocals
+  oohwahoh_x4
+end
+
+in_thread do
+  sync :all_vocals
+  ooh_x5
+end
+
+in_thread do
+  sync :all_vocals
+  la_x5
+end
+
 
 # Main synth
 in_thread do
   sync :synth_loop
-  10.times do
+  20.times do
     synth_loop
   end
+  # TODO re-sync
 end
 
 # Drums
 in_thread do
+  # drum beat is 16 beats / 4 bars long
   sync :drum_beat
-  loop do
+  14.times do
+    main_drum_beat
+  end
+  with_fx :level, amp: 0, amp_slide: 16, amp_slide_shape: 1 do
     main_drum_beat
   end
 end
@@ -358,24 +395,6 @@ in_thread do
   sync :end_synth
   end_synth_loop :d3
   end_synth_loop :b2
-end
-
-# Verse/chorus vocals
-in_thread do
-  sync :verse1
-  v1
-end
-
-# oooooooooooh wah oh
-in_thread do
-  sync :oohwahoh
-  oohwahoh_x4
-end
-
-# LA LA LA LA LAAAA
-in_thread do
-  sync :la
-  la_x5
 end
 
 
