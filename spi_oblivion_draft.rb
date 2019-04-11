@@ -297,48 +297,27 @@ end
 #########################
 # THE ACTUAL SONG
 #########################
-v1_adjust = 0.85  # TODO just put these in the functions themselves
-ooh_adjust = -4.15
 # Main thread, sends cues and sleeps
 in_thread do
   sleep 4  # IDK why this is necessary, but it is
   # TODO 1 bar of intro
   cue :all_vocals
-  sleep 1.5385
+  sleep 0.15
   cue :synth_loop
   sleep 32
   cue :drum_beat
-  ##| sleep 32 + v1_adjust  # Compensate for sample timing
-  ##| cue :verse1
-  ##| sleep 64 - v1_adjust + ooh_adjust # Add the adjustment time back in
-  ##| cue :oohwahoh
-  ##| sleep 12  # Don't need to adjust bc it's the same amount off as the previous one
-  ##| cue :la
-  ##| sleep 32 - ooh_adjust
+  # TODO entire rest of song
   ##| cue :end_synth
 end
 
-# Vocal threads
+# Vocals
 in_thread do
   sync :all_vocals
   main_vocs
-end
-
-in_thread do
-  sync :all_vocals
   oohwahoh_x4
-end
-
-in_thread do
-  sync :all_vocals
   ooh_x5
-end
-
-in_thread do
-  sync :all_vocals
   la_x5
 end
-
 
 # Main synth
 in_thread do
@@ -356,9 +335,11 @@ in_thread do
   14.times do
     main_drum_beat
   end
+  # Fade out
   with_fx :level, amp: 0, amp_slide: 16, amp_slide_shape: 1 do
     main_drum_beat
   end
+  # TODO resync
 end
 
 # Additional synths
