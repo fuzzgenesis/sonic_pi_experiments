@@ -68,7 +68,7 @@ define :aah_fx do |synth, amp|
 end
 
 define :aah_sound do
-  aah_fx :sine, 0.3
+  aah_fx :sine, 0.25
   aah_fx :dsaw, 0.1
   sleep 16
 end
@@ -149,7 +149,7 @@ define :screech do
     play :d5, amp: 0.15, attack: 0, release: 1.5, pan: rrand(-0.5, -0.25)
     use_synth :tech_saws
     play :d4, amp: 0.1, attack: 0, release: 1.5, pan: rrand(0.25, 0.5)
-    sample :ambi_dark_woosh, amp: 0.5, start: 0.3, finish: 0.45, pitch_dis: 0.005
+    sample :ambi_dark_woosh, amp: 0.25, start: 0.3, finish: 0.45, pitch_dis: 0.005
   end
 end
 
@@ -277,22 +277,8 @@ define :shuffle_drum_loop do
 end
 
 #########################
-# VOCALS
-#########################
-define :all_vocs do
-  smpl = "/Users/jaguarshark/personal/music/oblivion_samples/all_vocs.wav"
-  sample smpl, amp: 1.5
-end
-
-#########################
 # TRACK THREADS
 #########################
-
-# Vocals
-in_thread do
-  sync :all_vocals
-  all_vocs
-end
 
 # Main synth
 in_thread do
@@ -310,13 +296,13 @@ end
 in_thread do
   sync :drums
   14.times do
-    drum_loop  # drum beat is 16 beats / 4 bars long
-  end  # bar 65
+    drum_loop
+  end
   cue :kick_only
   sync :drums
-  5.times do  # And return to normal drum pattern at bar 73
+  5.times do
     drum_loop
-  end  # TODO there's some fading effect but eh. Bar 137
+  end
   cue :kick_only
   sync :drums
   10.times do
@@ -328,7 +314,7 @@ in_thread do
   sync :kick_only
   16.times do
     kick 2
-  end  # bar 73
+  end
   sync :kick_only
   6.times do
     kick 2
@@ -377,7 +363,7 @@ end
 in_thread do
   sync :piano
   sleep 32
-  with_fx :level, amp: 0.3 do
+  with_fx :level, amp: 0.4 do
     3.times do
       piano3
       sleep 2
@@ -388,7 +374,7 @@ end
 in_thread do
   sync :piano
   sleep 34
-  with_fx :level, amp: 0.2 do
+  with_fx :level, amp: 0.3 do
     3.times do
       piano4
       sleep 2
@@ -398,7 +384,7 @@ end
 
 in_thread do
   sync :piano
-  sleep 48 - 8
+  sleep 40
   with_fx :level, amp: 0.3 do
     2.times do
       piano5
@@ -413,7 +399,7 @@ end
 # Synth that accompanies the piano
 in_thread do
   sync :piano
-  with_fx :level, amp: 0.15 do
+  with_fx :level, amp: 0.1 do
     33.times do
       psynth_loop
     end
@@ -464,9 +450,6 @@ end
 # Main thread
 in_thread do
   sleep 4
-  # TODO 1 bar of intro
-  cue :all_vocals
-  sleep 0.18  # Experimentally determined  :|
   cue :synth_loop
   sleep 32
   cue :drums
